@@ -22,6 +22,7 @@ void PC1500::init(uint8_t clockPin, uint8_t dataPin) {
     while(!synced) {
         delay(0);
     }
+    detachInterrupt(digitalPinToInterrupt(clockPin));
     attachInterrupt(digitalPinToInterrupt(clockPin), readWriteIsr, CHANGE);
 }
 
