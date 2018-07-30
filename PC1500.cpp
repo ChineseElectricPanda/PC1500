@@ -20,8 +20,10 @@ void PC1500::init(uint8_t clockPin, uint8_t dataPin) {
 }
 
 StatusFlag PC1500::getStatus() {
+    numStatusFlagsRead = 0;
     isReading = true;
     sync();
+    attachInterrupt(digitalPinToInterrupt(clockPin), readIsr, RISING);
     while(isReading) {
         delay(0);
     }
@@ -33,8 +35,10 @@ void PC1500::writeKey(char c) {
     uint32_t code = charToKeypad(c);
     // Repeat the character 4 times;
     bitsToWrite = code << 24 | code << 16 | code << 8 | code;
+    numBitsWritten = 0;
     isWriting = true;
     sync();
+    attachInterrupt(digitalPinToInterrupt(clockPin), writeIsr, FALLING);
     while(isWriting) {
         delay(0);
     }
@@ -48,7 +52,6 @@ void PC1500::sync() {
         delay(0);
     }
     detachInterrupt(digitalPinToInterrupt(clockPin));
-    attachInterrupt(digitalPinToInterrupt(clockPin), readWriteIsr, CHANGE);
 }
 
 void PC1500::unsync() {
@@ -62,40 +65,25 @@ void PC1500::syncIsr() {
     }
 }
 
-void PC1500::readWriteIsr() {
-    delayMicroseconds(50);
-    if(digitalRead(clockPin) == LOW) {
-        if(isWriting) {
-            write();
-            if(numBitsWritten == 32) {
-                isWriting = false;
-            }
-        }
-    } else {
-        if(isReading) {
-            read();
-            if(numStatusFlagsRead == 16) {
-                isReading == false;
-            }
-        }
-    }
-}
-
-void PC1500::read() {
-    numStatusFlagsRead = numStatusFlagsRead % 16;
+void PC1500::readIsr() {
     pinMode(dataPin, INPUT);
     delayMicroseconds(100);
     statusFlags <<= 1;
     statusFlags |= digitalRead(dataPin);
     numStatusFlagsRead++;
+    if(numStatusFlagsRead == 16) {
+        isReading = false;
+    }
 }
 
-void PC1500::write() {
-    numBitsWritten = numBitsWritten % 32;
+void PC1500::writeIsr() {
     pinMode(dataPin, OUTPUT);
     delayMicroseconds(100);
     digitalWrite(dataPin, bitsToWrite & (0x1 << (31 - numBitsWritten)) ? HIGH : LOW);
     numBitsWritten++;
+    if(numBitsWritten == 32) {
+        isWriting = false;
+    }
 }
 
 uint8_t PC1500::charToKeypad(char c) {

@@ -100,10 +100,8 @@ private:
     static void unsync(void);
 
     static void syncIsr(void);
-    static void readWriteIsr(void);
-
-    static void read(void);
-    static void write(void);
+    static void readIsr(void);
+    static void writeIsr(void);
 
     static uint8_t charToKeypad(char c);
 };
