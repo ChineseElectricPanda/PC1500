@@ -102,6 +102,7 @@ private:
     static void read(void);
     static void write(void);
 
+    static uint8_t charToKeypad(char c);
 };
 
 #endif

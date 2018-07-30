@@ -27,12 +27,13 @@ StatusFlag PC1500::getStatus() {
     return statusFlags;
 }
 
-void writeKey(char c) {
+void PC1500::writeKey(char c) {
     while(isWriting) {
         delay(1);
     }
+    uint32_t code = charToKeypad(c);
     // Repeat the character 4 times;
-    bitsToWrite = c << 24 | c << 16 | c << 8 | c;
+    bitsToWrite = code << 24 | code << 16 | code << 8 | code;
 }
 
 
@@ -77,4 +78,25 @@ void PC1500::write() {
     delayMicroseconds(100);
     digitalWrite(dataPin, bitsToWrite & (0x1 << (31 - numBitsWritten)) ? HIGH : LOW);
     numBitsWritten++;
+}
+
+uint8_t PC1500::charToKeypad(char c) {
+    switch (c) {
+        case '1': return 0x41;
+        case '2': return 0x21;
+        case '3': return 0x11;
+        case '4': return 0x42;
+        case '5': return 0x22;
+        case '6': return 0x12;
+        case '7': return 0x44;
+        case '8': return 0x24;
+        case '9': return 0x14;
+        case '0': return 0x28;
+        case '*': return 0x48;
+        case '#': return 0x18;
+        case 'F': return 0xC0;
+        case 'E': return 0xA0;
+        case 'P': return 0x90;
+    }
+    return 0x00;
 }
