@@ -19,20 +19,22 @@ void PC1500::init(uint8_t clockPin, uint8_t dataPin) {
     PC1500::dataPin = dataPin;
     synced = false;
     attachInterrupt(digitalPinToInterrupt(clockPin), syncIsr, RISING);
-    while(!synced) { }
+    while(!synced) {
+        delay(0);
+    }
     attachInterrupt(digitalPinToInterrupt(clockPin), readWriteIsr, CHANGE);
 }
 
 StatusFlag PC1500::getStatus() {
     while(isReading) {
-        delay(1);
+        delay(0);
     }
     return statusFlags;
 }
 
 void PC1500::writeKey(char c) {
     while(isWriting) {
-        delay(1);
+        delay(0);
     }
     uint32_t code = charToKeypad(c);
     // Repeat the character 4 times;
