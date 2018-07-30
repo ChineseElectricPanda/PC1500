@@ -11,6 +11,9 @@ volatile bool PC1500::isWriting = false;
 
 volatile bool PC1500::synced = false;
 
+uint8_t PC1500::clockPin = 0;
+uint8_t PC1500::dataPin = 0;
+
 void PC1500::init(uint8_t clockPin, uint8_t dataPin) {
     PC1500::clockPin = clockPin;
     PC1500::dataPin = dataPin;
