@@ -96,6 +96,9 @@ private:
 
     static volatile bool synced;
 
+    static void sync(void);
+    static void unsync(void);
+
     static void syncIsr(void);
     static void readWriteIsr(void);
 

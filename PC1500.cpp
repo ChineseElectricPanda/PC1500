@@ -17,6 +17,31 @@ uint8_t PC1500::dataPin = 0;
 void PC1500::init(uint8_t clockPin, uint8_t dataPin) {
     PC1500::clockPin = clockPin;
     PC1500::dataPin = dataPin;
+}
+
+StatusFlag PC1500::getStatus() {
+    isReading = true;
+    sync();
+    while(isReading) {
+        delay(0);
+    }
+    unsync();
+    return statusFlags;
+}
+
+void PC1500::writeKey(char c) {
+    uint32_t code = charToKeypad(c);
+    // Repeat the character 4 times;
+    bitsToWrite = code << 24 | code << 16 | code << 8 | code;
+    isWriting = true;
+    sync();
+    while(isWriting) {
+        delay(0);
+    }
+    unsync();
+}
+
+void PC1500::sync() {
     synced = false;
     attachInterrupt(digitalPinToInterrupt(clockPin), syncIsr, RISING);
     while(!synced) {
@@ -26,22 +51,9 @@ void PC1500::init(uint8_t clockPin, uint8_t dataPin) {
     attachInterrupt(digitalPinToInterrupt(clockPin), readWriteIsr, CHANGE);
 }
 
-StatusFlag PC1500::getStatus() {
-    while(isReading) {
-        delay(0);
-    }
-    return statusFlags;
+void PC1500::unsync() {
+    detachInterrupt(digitalPinToInterrupt(clockPin));
 }
-
-void PC1500::writeKey(char c) {
-    while(isWriting) {
-        delay(0);
-    }
-    uint32_t code = charToKeypad(c);
-    // Repeat the character 4 times;
-    bitsToWrite = code << 24 | code << 16 | code << 8 | code;
-}
-
 
 void PC1500::syncIsr() {
     delayMicroseconds(1500);
