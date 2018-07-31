@@ -32,7 +32,7 @@ StatusFlag PC1500::getStatus() {
 }
 
 void PC1500::writeKey(char c) {
-    uint32_t code = charToKeypad(c);
+    uint32_t code = charToKeypad(c) ^ 0xFF;
     // Repeat the character 4 times;
     bitsToWrite = code << 24 | code << 16 | code << 8 | code;
     numBitsWritten = 0;
