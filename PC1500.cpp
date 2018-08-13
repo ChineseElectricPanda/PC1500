@@ -24,9 +24,7 @@ StatusFlag PC1500::getStatus() {
     isReading = true;
     sync();
     attachInterrupt(digitalPinToInterrupt(clockPin), readIsr, RISING);
-    while(isReading) {
-        delay(0);
-    }
+    while(isReading) { }
     unsync();
     return statusFlags;
 }
@@ -38,24 +36,22 @@ void PC1500::writeKey(char c) {
     numBitsWritten = 0;
     isWriting = true;
     sync();
-    attachInterrupt(digitalPinToInterrupt(clockPin), writeIsr, FALLING);
-    while(isWriting) {
-        delay(0);
-    }
+    attachInterrupt(digitalPinToInterrupt(clockPin), writeIsr, CHANGE);
+    while(isWriting) { }
     unsync();
 }
 
 void PC1500::sync() {
+    detachInterrupt(digitalPinToInterrupt(clockPin));
     synced = false;
     attachInterrupt(digitalPinToInterrupt(clockPin), syncIsr, RISING);
-    while(!synced) {
-        delay(0);
-    }
+    while(!synced) { }
     detachInterrupt(digitalPinToInterrupt(clockPin));
 }
 
 void PC1500::unsync() {
     detachInterrupt(digitalPinToInterrupt(clockPin));
+    attachInterrupt(digitalPinToInterrupt(clockPin), idleIsr, CHANGE);
 }
 
 void PC1500::syncIsr() {
@@ -67,7 +63,6 @@ void PC1500::syncIsr() {
 
 void PC1500::readIsr() {
     pinMode(dataPin, INPUT);
-    delayMicroseconds(100);
     statusFlags <<= 1;
     statusFlags |= digitalRead(dataPin);
     numStatusFlagsRead++;
@@ -77,12 +72,23 @@ void PC1500::readIsr() {
 }
 
 void PC1500::writeIsr() {
-    pinMode(dataPin, OUTPUT);
-    delayMicroseconds(100);
-    digitalWrite(dataPin, bitsToWrite & (0x1 << (31 - numBitsWritten)) ? HIGH : LOW);
-    numBitsWritten++;
-    if(numBitsWritten == 32) {
-        isWriting = false;
+    if(digitalRead(clockPin) == LOW) {
+        pinMode(dataPin, OUTPUT);
+        digitalWrite(dataPin, bitsToWrite & (0x1 << (31 - numBitsWritten)) ? HIGH : LOW);
+        numBitsWritten++;
+        if(numBitsWritten == 32) {
+            isWriting = false;
+        }
+    } else {
+        pinMode(dataPin, INPUT);
+    }
+}
+void PC1500::idleIsr() {
+    if(digitalRead(clockPin) == LOW) {
+        pinMode(dataPin, OUTPUT);
+        digitalWrite(dataPin, HIGH);
+    } else {
+        pinMode(dataPin, INPUT);
     }
 }
 

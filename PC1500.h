@@ -102,6 +102,7 @@ private:
     static void syncIsr(void);
     static void readIsr(void);
     static void writeIsr(void);
+    static void idleIsr(void);
 
     static uint8_t charToKeypad(char c);
 };
